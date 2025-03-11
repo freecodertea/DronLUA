@@ -2,9 +2,9 @@ local pion = require "pion"
 local timer = require "timer"
 local math = require "math"
 
-local radius = 1.0
-local altitude = 2.0
-local duration = 300
+local radius = 1.0 
+local altitude = 2.0 
+local duration = 300  
 
 local function takeoff(target_altitude)
     pion.set_mode("GUIDED")
@@ -15,17 +15,29 @@ local function takeoff(target_altitude)
     end
 end
 
-local function figure_eight(radius, duration)
+local function figure_eight_with_camera(radius, duration)
     local start_time = timer.get_time()
-    local angle = 0
+    local angle = 0 
+
     while timer.get_time() - start_time < duration do
+        local color_data = pion.get_camera_color_data()
+
+        if color_data == "red" then 
+            angle = angle + 0.05  
+        elseif color_data == "green" then 
+            angle = angle - 0.05 
+        end
+
         local north = radius * math.sin(angle)
         local east = radius * math.sin(2 * angle)
+
         pion.set_position(north, east, -altitude)
+
         angle = angle + 0.1
         if angle >= 2 * math.pi then
-            angle = 0
+            angle = 0 
         end
+
         timer.sleep(0.1)
     end
 end
@@ -43,6 +55,6 @@ local function smooth_land()
     end
 end
 
-takeoff(altitude)
-figure_eight(radius, duration)
-smooth_land()
+takeoff(altitude) 
+figure_eight_with_camera(radius, duration) 
+smooth_land() 
