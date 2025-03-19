@@ -1,0 +1,68 @@
+local ledbar = Ledbar.new(8)
+
+local curr_state = "_PIONEER_LED_1"
+
+local function flyCircle(centerX, centerY, radius, steps, height)
+    for i = 0, steps do
+        local angle = (i / steps) * 2 * math.pi
+        local x = centerX + radius * math.cos(angle)
+        local y = centerY + radius * math.sin(angle)
+        ap.goToLocalPoint(x, y, height)
+        sleep(100 / 1000.0)
+    end
+end
+
+action = {
+    ["_PIONEER_LED_1"] = function (x) 
+        ledbar:set(0, 1.0, 0.0, 0.0)
+        ledbar:set(1, 1.0, 0.0, 0.0)
+        ledbar:set(2, 1.0, 0.0, 0.0)
+        ledbar:set(3, 1.0, 0.0, 0.0)
+
+        sleep(1000 / 1000.0) 
+        ap.push(Ev.MCE_PREFLIGHT)
+        sleep(2)
+        ap.push(Ev.MCE_TAKEOFF)
+
+        curr_state = "_FLY_EIGHT_1"
+    end,
+
+    ["_FLY_EIGHT_1"] = function (x) 
+        ledbar:set(0, 0.0, 1.0, 0.0)
+        ledbar:set(1, 0.0, 1.0, 0.0)
+        ledbar:set(2, 0.0, 1.0, 0.0)
+        ledbar:set(3, 0.0, 1.0, 0.0)
+
+        flyCircle(1, 0, 1, 50, 1.5)
+
+        curr_state = "_FLY_EIGHT_2"
+    end,
+
+    ["_FLY_EIGHT_2"] = function (x) 
+        ledbar:set(0, 0.0, 1.0, 1.0)
+        ledbar:set(1, 0.0, 1.0, 1.0)
+        ledbar:set(2, 0.0, 1.0, 1.0)
+        ledbar:set(3, 0.0, 1.0, 1.0)
+
+        flyCircle(-1, 0, 1, 50, 1.5)
+
+        curr_state = "_FLY_EIGHT_1"
+    end,
+}
+
+function callback(event)
+    if (event == Ev.TAKEOFF_COMPLETE) then
+        action[curr_state]()
+    end
+
+    if (event == Ev.POINT_REACHED) then
+        action[curr_state]()
+    end
+
+    if (event == Ev.COPTER_LANDED) then
+        sleep(2)
+        action[curr_state]()
+    end
+end
+
+action[curr_state]()
